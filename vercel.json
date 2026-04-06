@@ -1,9 +1,12 @@
 {
   "routes": [
     {
+      "src": "/lastplayed",
+      "dest": "/lastplayed.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
-      "dest2": "/lastplayed.html"
     }
   ]
 }
