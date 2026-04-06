@@ -5,44 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Loading...</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #000;
-    }
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
-    }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
+    iframe { width: 100%; height: 100%; border: none; display: block; }
   </style>
 </head>
 <body>
   <iframe id="gameFrame"></iframe>
-<script>
-  const pathParts = window.location.pathname.split('/').filter(Boolean);
 
-  const hasUrlMarker = pathParts[pathParts.length - 1] === "url";
+  <script>
+    // 1. Get the parts of the URL path
+    // Example: ["Granny Online", "race-online-skem", "url", "ThatWirdGuy", ...]
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
 
-  let subdomain = "";
-  let GameName = "Unknown Game";
+    // 2. Find where "url" is located
+    const markerIndex = pathParts.indexOf("url");
 
-  if (hasUrlMarker) {
-    
-    subdomain = pathParts[pathParts.length - 2] || ""; 
-    GameName = decodeURIComponent(pathParts[0] || "Unknown Game");
-  } else {
-    subdomain = pathParts[0] || "";
-    GameName = decodeURIComponent(pathParts[1] || "Unknown Game");
-  }
+    if (markerIndex !== -1 && markerIndex > 0) {
+      // The Game ID (subdomain) is always the item right BEFORE "url"
+      const subdomain = pathParts[markerIndex - 1];
+      
+      // The Game Name is the very FIRST item in the URL
+      const GameName = decodeURIComponent(pathParts[0]);
 
-  const GameIconPath = decodeURIComponent(pathParts.slice(2).join('/') || "");
-  
-  const finalGameUrl = "https://" + subdomain + ".vercel.app";
-</script>
+      // The Icon Path is everything AFTER "url"
+      const GameIconPath = pathParts.slice(markerIndex + 1).join('/');
+
+      // 3. Set the Iframe Source
+      const finalGameUrl = "https://" + subdomain + ".vercel.app";
+      document.getElementById('gameFrame').src = finalGameUrl;
+      document.title = GameName;
+
+      // 4. Handle the Icon
+      let GameIcon = "https://cdn.jsdelivr.net/gh/ThatWirdGuy/Game-Icons@main/Missing.png";
+      if (GameIconPath) {
+        // Formats GitHub blob URLs to jsDelivr format
+        GameIcon = "https://cdn.jsdelivr.net/gh/" + GameIconPath.replace("/blob/", "@");
+      }
+
+      // 5. Save to History
+      try {
+        let playedGames = JSON.parse(localStorage.getItem('playedGames') || '[]');
+        const newGameEntry = { name: GameName, icon: GameIcon, url: window.location.href };
+        
+        playedGames = playedGames.filter(g => g.name !== GameName);
+        playedGames.unshift(newGameEntry);
+        localStorage.setItem('playedGames', JSON.stringify(playedGames.slice(0, 20)));
+      } catch (e) {
+        console.error("Storage failed:", e);
+      }
+    } else {
+      // If "url" isn't in the link, display an error in the console
+      console.error("Invalid URL format. Expected: /Name/ID/url/IconPath");
+    }
+  </script>
 </body>
 </html>
