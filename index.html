@@ -10,38 +10,30 @@
     margin: 0;
     padding: 0;
     width: 100%;
-    height: 100%
+    height: 100%;
     overflow: hidden;
   }
 </style>
 
-
 <iframe id="What"></iframe>
-
 
 <script>
   const pathParts = window.location.pathname.split('/').filter(Boolean);
-  
-  const Url = window.location.pathname.split('/').filter(Boolean)[0]
-  const GameName = decodeURIComponent(pathParts[1] || appName);
-  const GameIcon = pathParts[2];
-  
-  document.getElementById('What').src = Url;
 
-  const target = "https://" + Url + ".vercel.app";
-  
-  console.log("Loading:", target);
-  
+  const Url = pathParts[0];
+  const GameName = decodeURIComponent(pathParts[1] || "Unknown Game");
+  const GameIcon = decodeURIComponent(pathParts[2] || "");
+
   if (Url) {
-    document.getElementById('What').src = "https://" + Url + ".vercel.app"
+    document.getElementById('What').src = "https://" + Url + ".vercel.app";
   }
 
   document.title = GameName;
 
   let playedGames = JSON.parse(localStorage.getItem('playedGames') || '[]');
 
-   if (!playedGames.includes(GameName)) {
-    playedGames.push(GameName);
+  if (!playedGames.some(g => g.name === GameName)) {
+    playedGames.push({ name: GameName, icon: GameIcon });
     localStorage.setItem('playedGames', JSON.stringify(playedGames));
   }
 
