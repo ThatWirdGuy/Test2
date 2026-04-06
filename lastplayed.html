@@ -68,7 +68,8 @@
       card.className = 'game-card';
 
       const img = document.createElement('img');
-      img.src = game.icon ? decodeURIComponent(game.icon) : 'https://via.placeholder.com/100';
+      // encode spaces in URLs
+      img.src = game.icon ? encodeURI(game.icon) : 'https://via.placeholder.com/100';
       img.alt = game.name || 'Game';
       img.onerror = () => { img.src = 'https://via.placeholder.com/100'; };
       card.appendChild(img);
