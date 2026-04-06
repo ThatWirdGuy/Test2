@@ -33,37 +33,64 @@
     border-radius: 8px;
     margin-bottom: 10px;
   }
+  #clearButton {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: #ff4d4d;
+    color: white;
+    cursor: pointer;
+  }
+  #clearButton:hover {
+    background-color: #e60000;
+  }
 </style>
 </head>
 <body>
 
 <h1>Games You've Played</h1>
+<button id="clearButton">Clear Played Games</button>
 <div class="grid" id="gamesGrid"></div>
 
 <script>
-  const games = JSON.parse(localStorage.getItem('playedGames') || '[]');
   const grid = document.getElementById('gamesGrid');
+  const clearButton = document.getElementById('clearButton');
 
-  games.forEach(game => {
-    const card = document.createElement('div');
-    card.className = 'game-card';
-    const img = document.createElement('img');
-    img.src = game.icon || '';
-    img.alt = game.name || '';
-    card.appendChild(img);
-    const name = document.createElement('div');
-    name.textContent = game.name || '';
-    card.appendChild(name);
-    grid.appendChild(card);
+  function loadGames() {
+    grid.innerHTML = '';
+    const games = JSON.parse(localStorage.getItem('playedGames') || '[]');
+
+    games.forEach(game => {
+      const card = document.createElement('div');
+      card.className = 'game-card';
+      const img = document.createElement('img');
+      img.src = game.icon || '';
+      img.alt = game.name || '';
+      card.appendChild(img);
+      const name = document.createElement('div');
+      name.textContent = game.name || '';
+      card.appendChild(name);
+      grid.appendChild(card);
+    });
+
+    if (games.length === 0) {
+      const empty = document.createElement('div');
+      empty.textContent = "You haven't played any games yet!";
+      empty.style.gridColumn = '1 / -1';
+      empty.style.textAlign = 'center';
+      grid.appendChild(empty);
+    }
+  }
+
+  clearButton.addEventListener('click', () => {
+    localStorage.removeItem('playedGames');
+    loadGames();
   });
 
-  if (games.length === 0) {
-    const empty = document.createElement('div');
-    empty.textContent = "You haven't played any games yet!";
-    empty.style.gridColumn = '1 / -1';
-    empty.style.textAlign = 'center';
-    grid.appendChild(empty);
-  }
+  loadGames();
 </script>
 
 </body>
