@@ -3,86 +3,187 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Played Games</title>
+<title>Played Games Manager</title>
 <style>
-  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 10px; background-color: transparent; color: #333; overflow-x: hidden; }
-  h1 { text-align: center; font-size: 1.5rem; cursor: default; user-select: none; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
-  .game-card { padding: 8px; background-color: #f9f9f9; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; transition: 0.2s; border: 1px solid #eee; }
-  .game-card:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
-  .game-card img { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; background-color: #e0e0e0; }
-  .game-name { font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .empty-msg { grid-column: 1/-1; text-align: center; opacity: 0.6; padding: 20px; font-style: italic; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 20px;
+    background-color: #ffffff;
+    color: #333;
+  }
+  h1 { text-align: center; margin-bottom: 10px; }
+  
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  button:active { transform: scale(0.95); }
+  
+  #addButton { background-color: #28a745; color: white; }
+  #clearButton { background-color: #dc3545; color: white; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 20px;
+  }
+
+  .game-card {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    background: #fff;
+  }
+
+  .game-card img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    background-color: #dee2e6;
+  }
+
+  .game-name {
+    font-weight: 600;
+    font-size: 14px;
+    word-wrap: break-word;
+  }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+    font-style: italic;
+  }
 </style>
 </head>
 <body>
 
-<h1 id="mainTitle">Games You've Played</h1>
+<h1>Games You've Played</h1>
+
+<div class="controls">
+  <button id="addButton">Add New Game</button>
+  <button id="clearButton">Clear All History</button>
+</div>
+
 <div class="grid" id="gamesGrid"></div>
 
 <script>
   const FALLBACK = 'https://cdn.jsdelivr.net/gh/ThatWirdGuy/Game-Icons@main/Missing.png';
   const grid = document.getElementById('gamesGrid');
 
+  // Fixes GitHub "blob" URLs to "raw" URLs automatically
+  function formatIconUrl(url) {
+    if (!url || url.trim() === '') return FALLBACK;
+    if (url.includes('github.com') && url.includes('/blob/')) {
+      return url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+    }
+    return url;
+  }
+
   function loadGames() {
     grid.innerHTML = '';
     const games = JSON.parse(localStorage.getItem('playedGames') || '[]');
 
     if (games.length === 0) {
-      grid.innerHTML = '<div class="empty-msg">No recent games. Launch a game to see it here!</div>';
+      grid.innerHTML = '<div class="empty-state">No games saved yet. Click "Add New Game" to start your list!</div>';
       return;
     }
 
-    games.forEach(game => {
+    games.forEach((game, index) => {
       const card = document.createElement('div');
       card.className = 'game-card';
       
-      let iconUrl = game.icon || FALLBACK;
-      if(iconUrl.includes('github.com') && iconUrl.includes('/blob/')) {
-        iconUrl = iconUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-      }
+      const img = document.createElement('img');
+      img.src = formatIconUrl(game.icon);
+      img.alt = game.name;
+      img.onerror = () => { img.src = FALLBACK; };
 
-      card.innerHTML = `
-        <img src="${iconUrl}" onerror="this.src='${FALLBACK}'">
-        <div class="game-name">${game.name || 'Untitled'}</div>
-      `;
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'game-name';
+      nameDiv.textContent = game.name || 'Untitled Game';
 
+      card.appendChild(img);
+      card.appendChild(nameDiv);
+
+      // Open in about:blank cloaked window
       card.onclick = () => {
+        if (!game.url) return;
         const win = window.open('about:blank', '_blank');
         if (win) {
-          win.document.body.style.cssText = "margin:0;height:100vh;overflow:hidden;";
+          win.document.title = game.name || "Game";
+          win.document.body.style.margin = '0';
+          win.document.body.style.height = '100vh';
+          win.document.body.style.overflow = 'hidden';
+          
           const iframe = win.document.createElement('iframe');
-          iframe.style.cssText = "width:100%;height:100%;border:none;margin:0;";
+          iframe.style.width = '100%';
+          iframe.style.height = '100%';
+          iframe.style.border = 'none';
+          iframe.style.margin = '0';
           iframe.src = game.url;
+          
           win.document.body.appendChild(iframe);
+        } else {
+          alert('Pop-up blocked! Please allow pop-ups for this site.');
         }
       };
+
       grid.appendChild(card);
     });
   }
 
-  // HIDDEN FEATURE: Double click the title to manually add or clear
-  document.getElementById('mainTitle').ondblclick = () => {
-    const action = prompt("Type 'add' to add a game or 'clear' to reset:");
-    if (action === 'add') {
-      const name = prompt("Game Name:");
-      const url = prompt("Game URL:");
-      const icon = prompt("Icon URL (optional):");
-      if (name && url) {
-        let games = JSON.parse(localStorage.getItem('playedGames') || '[]');
-        games.push({ name, url, icon });
-        localStorage.setItem('playedGames', JSON.stringify(games));
-        loadGames();
-      }
-    } else if (action === 'clear') {
-      if(confirm("Clear all games?")) {
-        localStorage.removeItem('playedGames');
-        loadGames();
-      }
+  // Manual Add Feature
+  document.getElementById('addButton').onclick = () => {
+    const name = prompt("Enter Game Name:");
+    if (!name) return;
+    
+    const url = prompt("Enter Game URL:");
+    if (!url) return;
+    
+    const icon = prompt("Enter Icon URL (Optional):");
+
+    let games = JSON.parse(localStorage.getItem('playedGames') || '[]');
+    games.push({ name, url, icon });
+    localStorage.setItem('playedGames', JSON.stringify(games));
+    loadGames();
+  };
+
+  // Clear Feature
+  document.getElementById('clearButton').onclick = () => {
+    if (confirm("Are you sure you want to delete your entire game history?")) {
+      localStorage.removeItem('playedGames');
+      loadGames();
     }
   };
 
+  // Initial execution
   loadGames();
 </script>
+
 </body>
 </html>
