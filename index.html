@@ -1,1 +1,22 @@
 <title>New Tab</title>
+
+<style>
+  iframe{
+    width: 100%; height: 100%;
+  }
+</style>
+
+
+<iframe id="What"></iframe>
+
+
+<script>
+  const Url = window.location.pathname.split('/').filter(Boolean)[0]
+
+  document.getElementById('What').src = Url;0
+
+  if (Url> {
+    document.getElementById('What').src = "https://" + Url + ".vercel.app"
+  }
+</script>
+
