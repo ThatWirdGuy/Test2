@@ -26,6 +26,11 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     word-break: break-word;
     cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .game-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
   .game-card img {
     width: 100px;
@@ -55,7 +60,7 @@
 <button id="clearButton">Clear Played Games</button>
 <div class="grid" id="gamesGrid"></div>
 <script>
-  const FALLBACK = 'https://cdn.jsdelivr.net/gh/ThatWirdGuy/Game-Icons@main/Missing.png';
+  const FALLBACK = 'https://cdn.jsdelivr.net/gh/ThatWirdGuy/Game-Icons@main/Missing.png'; // ✅ correct format
   const grid = document.getElementById('gamesGrid');
   const clearButton = document.getElementById('clearButton');
 
@@ -79,7 +84,12 @@
         img.src = FALLBACK;
       };
 
-      card.appendChild(img);
+      // Click to reopen the game
+      if (game.url) {
+        card.addEventListener('click', () => {
+          window.location.href = game.url;
+        });
+      }
 
       const name = document.createElement('div');
       name.textContent = game.name || '';
