@@ -42,10 +42,11 @@
     // Save to localStorage
     let playedGames = JSON.parse(localStorage.getItem('playedGames') || '[]');
     const existingIndex = playedGames.findIndex(g => g.name === GameName);
+    const gameUrl = window.location.pathname;
     if (existingIndex !== -1) {
-      playedGames[existingIndex] = { name: GameName, icon: GameIcon };
+      playedGames[existingIndex] = { name: GameName, icon: GameIcon, url: gameUrl };
     } else {
-      playedGames.push({ name: GameName, icon: GameIcon });
+      playedGames.push({ name: GameName, icon: GameIcon, url: gameUrl });
     }
     localStorage.setItem('playedGames', JSON.stringify(playedGames));
     console.log("Games you've played:", playedGames);
