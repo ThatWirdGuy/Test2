@@ -8,6 +8,7 @@
   body {
     font-family: Arial, sans-serif;
     margin: 20px;
+    background-color: #ffffff;
   }
   h1 {
     text-align: center;
@@ -38,6 +39,7 @@
     object-fit: cover;
     border-radius: 8px;
     margin-bottom: 10px;
+    background-color: #ddd;
   }
   #clearButton {
     display: block;
@@ -56,11 +58,14 @@
 </style>
 </head>
 <body>
+
 <h1>Games You've Played</h1>
 <button id="clearButton">Clear Played Games</button>
+
 <div class="grid" id="gamesGrid"></div>
+
 <script>
-  const FALLBACK = 'https://cdn.jsdelivr.net/gh/ThatWirdGuy/Game-Icons@main/Missing.png'; // ✅ correct format
+  const FALLBACK = 'https://cdn.jsdelivr.net/gh/ThatWirdGuy/Game-Icons@main/Missing.png';
   const grid = document.getElementById('gamesGrid');
   const clearButton = document.getElementById('clearButton');
 
@@ -68,53 +73,74 @@
     grid.innerHTML = '';
     const games = JSON.parse(localStorage.getItem('playedGames') || '[]');
 
+    if (games.length === 0) {
+      const empty = document.createElement('div');
+      empty.textContent = "You haven't played any games yet!";
+      empty.style.gridColumn = '1 / -1';
+      empty.style.textAlign = 'center';
+      empty.style.marginTop = '20px';
+      grid.appendChild(empty);
+      return;
+    }
+
     games.forEach(game => {
       const card = document.createElement('div');
       card.className = 'game-card';
 
+      // Image Handling
       const img = document.createElement('img');
-
-      // Use icon URL directly — do NOT encodeURI (it's already a valid URL from jsDelivr)
       img.src = (game.icon && game.icon.trim() !== '') ? game.icon : FALLBACK;
       img.alt = game.name || 'Game';
 
-      // Guard against infinite onerror loop if fallback itself fails
       img.onerror = () => {
         img.onerror = null;
         img.src = FALLBACK;
       };
 
-      // Click to reopen the game
+      // Handle Game Launching (about:blank Cloaking)
       if (game.url) {
         card.addEventListener('click', () => {
-          window.location.href = game.url;
+          const win = window.open('about:blank', '_blank');
+          if (win) {
+            win.document.title = game.name || "Game";
+            win.document.body.style.margin = '0';
+            win.document.body.style.height = '100vh';
+            win.document.body.style.overflow = 'hidden';
+            
+            const iframe = win.document.createElement('iframe');
+            iframe.style.border = 'none';
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.margin = '0';
+            iframe.src = game.url;
+            
+            win.document.body.appendChild(iframe);
+          } else {
+            alert('Pop-up blocked! Please allow pop-ups to launch the game.');
+          }
         });
       }
 
       card.appendChild(img);
 
       const name = document.createElement('div');
-      name.textContent = game.name || '';
+      name.textContent = game.name || 'Unknown Game';
       card.appendChild(name);
 
       grid.appendChild(card);
     });
-
-    if (games.length === 0) {
-      const empty = document.createElement('div');
-      empty.textContent = "You haven't played any games yet!";
-      empty.style.gridColumn = '1 / -1';
-      empty.style.textAlign = 'center';
-      grid.appendChild(empty);
-    }
   }
 
   clearButton.addEventListener('click', () => {
-    localStorage.removeItem('playedGames');
-    loadGames();
+    if (confirm("Are you sure you want to clear your play history?")) {
+      localStorage.removeItem('playedGames');
+      loadGames();
+    }
   });
 
+  // Initial Load
   loadGames();
 </script>
+
 </body>
 </html>
