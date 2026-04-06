@@ -24,14 +24,48 @@
   const GameName = decodeURIComponent(pathParts[1] || "Unknown Game");
   const GameIcon = decodeURIComponent(pathParts[2] || "");
 
+<style>
+  iframe{
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+</style>
+
+<iframe id="What"></iframe>
+
+<script>
+  const pathParts = window.location.pathname.split('/').filter(Boolean);
+
+  const Url = pathParts[0]; // game repo/domain
+  const GameName = decodeURIComponent(pathParts[1] || "Unknown Game");
+  const GameIconPath = pathParts[2] || ""; // e.g., ThatWirdGuy/Game-Icons/blob/main/ZombsIo.png
+
+  // Convert GitHub URL path to jsDelivr CDN URL
+  let GameIcon = "";
+  if (GameIconPath) {
+    // replace 'blob/' with '' for jsDelivr
+    GameIcon = "https://cdn.jsdelivr.net/gh/" + GameIconPath.replace("/blob/", "/");
+  }
+
+  // Load the game in iframe
   if (Url) {
     document.getElementById('What').src = "https://" + Url + ".vercel.app";
   }
-  
-  document.title = GameName;
-  
-  let playedGames = JSON.parse(localStorage.getItem('playedGames') || '[]');
 
+  document.title = GameName;
+
+  // Save played games
+  let playedGames = JSON.parse(localStorage.getItem('playedGames') || '[]');
   const existingIndex = playedGames.findIndex(g => g.name === GameName);
 
   if (existingIndex !== -1) {
@@ -41,6 +75,5 @@
   }
 
   localStorage.setItem('playedGames', JSON.stringify(playedGames));
-
   console.log("Games you've played:", playedGames);
 </script>
