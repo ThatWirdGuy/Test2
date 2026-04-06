@@ -27,7 +27,7 @@
 
     const Url          = pathParts[0] || "fallback-game-domain"; // Vercel subdomain
     const GameName     = decodeURIComponent(pathParts[1] || "Unknown Game");
-    const GameIconPath = decodeURIComponent(pathParts[2] || "");
+    const GameIconPath = decodeURIComponent(pathParts.slice(2).join('/') || "");
 
     // Convert GitHub blob path → jsDelivr CDN URL
     let GameIcon = "";
