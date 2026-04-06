@@ -36,4 +36,13 @@
   }
 
   document.title = GameName;
+
+  let playedGames = JSON.parse(localStorage.getItem('playedGames') || '[]');
+
+   if (!playedGames.includes(GameName)) {
+    playedGames.push(GameName);
+    localStorage.setItem('playedGames', JSON.stringify(playedGames));
+  }
+
+  console.log("Games you've played:", playedGames);
 </script>
