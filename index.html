@@ -27,15 +27,20 @@
   if (Url) {
     document.getElementById('What').src = "https://" + Url + ".vercel.app";
   }
-
+  
   document.title = GameName;
-
+  
   let playedGames = JSON.parse(localStorage.getItem('playedGames') || '[]');
 
-  if (!playedGames.some(g => g.name === GameName)) {
+  const existingIndex = playedGames.findIndex(g => g.name === GameName);
+
+  if (existingIndex !== -1) {
+    playedGames[existingIndex] = { name: GameName, icon: GameIcon };
+  } else {
     playedGames.push({ name: GameName, icon: GameIcon });
-    localStorage.setItem('playedGames', JSON.stringify(playedGames));
   }
+
+  localStorage.setItem('playedGames', JSON.stringify(playedGames));
 
   console.log("Games you've played:", playedGames);
 </script>
