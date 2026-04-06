@@ -15,6 +15,10 @@
 
   document.getElementById('What').src = Url;
 
+  const target = "https://" + Url + ".vercel.app";
+  
+  console.log("Loading:", target);
+  
   if (Url) {
     document.getElementById('What').src = "https://" + Url + ".vercel.app"
   }
