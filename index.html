@@ -11,6 +11,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
+      background-color: #000;
     }
     iframe {
       width: 100%;
@@ -25,31 +26,51 @@
   <script>
     const pathParts = window.location.pathname.split('/').filter(Boolean);
 
-    const Url          = pathParts[0] || "fallback-game-domain"; // Vercel subdomain
-    const GameName     = decodeURIComponent(pathParts[1] || "Unknown Game");
+    // 1. Parse Data from URL
+    const subdomain = pathParts[0] || ""; 
+    const GameName = decodeURIComponent(pathParts[1] || "Unknown Game");
     const GameIconPath = decodeURIComponent(pathParts.slice(2).join('/') || "");
 
-    // Convert GitHub blob path → jsDelivr CDN URL
-    let GameIcon = "";
+    // 2. Construct Real URLs
+    const finalGameUrl = "https://" + subdomain + ".vercel.app";
+    
+    let GameIcon = "https://cdn.jsdelivr.net/gh/ThatWirdGuy/Game-Icons@main/Missing.png";
     if (GameIconPath) {
+      // Fixes the blob to @ format for jsDelivr
       GameIcon = "https://cdn.jsdelivr.net/gh/" + GameIconPath.replace("/blob/", "@");
     }
 
-    // Load game
-    document.getElementById('gameFrame').src = "https://" + Url + ".vercel.app";
+    // 3. Load the Game into the local iframe
+    document.getElementById('gameFrame').src = finalGameUrl;
     document.title = GameName;
 
-    // Save to localStorage
-    let playedGames = JSON.parse(localStorage.getItem('playedGames') || '[]');
-    const existingIndex = playedGames.findIndex(g => g.name === GameName);
-    const gameUrl = window.location.pathname;
-    if (existingIndex !== -1) {
-      playedGames[existingIndex] = { name: GameName, icon: GameIcon, url: gameUrl };
-    } else {
-      playedGames.push({ name: GameName, icon: GameIcon, url: gameUrl });
+    // 4. SAVE TO LOCALSTORAGE (The Fix)
+    try {
+      let playedGames = JSON.parse(localStorage.getItem('playedGames') || '[]');
+
+      // Create the game object
+      const newGameEntry = { 
+        name: GameName, 
+        icon: GameIcon, 
+        url: finalGameUrl // Saving the ACTUAL game link, not the pathname
+      };
+
+      // Remove existing version of this game to avoid duplicates
+      playedGames = playedGames.filter(g => g.name !== GameName);
+
+      // Add to the front of the list (newest first)
+      playedGames.unshift(newGameEntry);
+
+      // Keep only the last 20 games to save space
+      if (playedGames.length > 20) {
+        playedGames = playedGames.slice(0, 20);
+      }
+
+      localStorage.setItem('playedGames', JSON.stringify(playedGames));
+    } catch (e) {
+      // If localStorage is blocked, the game still loads but won't save
+      console.error("Save failed:", e);
     }
-    localStorage.setItem('playedGames', JSON.stringify(playedGames));
-    console.log("Games you've played:", playedGames);
   </script>
 </body>
 </html>
