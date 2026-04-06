@@ -5,27 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Played Games</title>
 <style>
-  body { font-family: Arial, sans-serif; margin: 20px; background-color: #ffffff; }
-  h1 { text-align: center; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
-  .game-card { padding: 10px; background-color: #f0f0f0; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.15s; }
-  .game-card:hover { transform: scale(1.05); }
-  .game-card img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; background-color: #ddd; }
-  .controls { text-align: center; margin-bottom: 20px; }
-  button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin: 5px; font-weight: bold; }
-  #clearButton { background-color: #ff4d4d; color: white; }
-  #addButton { background-color: #4CAF50; color: white; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 10px; background-color: transparent; color: #333; overflow-x: hidden; }
+  h1 { text-align: center; font-size: 1.5rem; cursor: default; user-select: none; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+  .game-card { padding: 8px; background-color: #f9f9f9; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; transition: 0.2s; border: 1px solid #eee; }
+  .game-card:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+  .game-card img { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; background-color: #e0e0e0; }
+  .game-name { font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .empty-msg { grid-column: 1/-1; text-align: center; opacity: 0.6; padding: 20px; font-style: italic; }
 </style>
 </head>
 <body>
 
-<h1>Games You've Played</h1>
-
-<div class="controls">
-  <button id="addButton">Add Game Manually</button>
-  <button id="clearButton">Clear History</button>
-</div>
-
+<h1 id="mainTitle">Games You've Played</h1>
 <div class="grid" id="gamesGrid"></div>
 
 <script>
@@ -37,7 +29,7 @@
     const games = JSON.parse(localStorage.getItem('playedGames') || '[]');
 
     if (games.length === 0) {
-      grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center;">You haven\'t added any games yet.</div>';
+      grid.innerHTML = '<div class="empty-msg">No recent games. Launch a game to see it here!</div>';
       return;
     }
 
@@ -45,59 +37,50 @@
       const card = document.createElement('div');
       card.className = 'game-card';
       
-      const img = document.createElement('img');
-      // Convert GitHub blob links to Raw links automatically
       let iconUrl = game.icon || FALLBACK;
       if(iconUrl.includes('github.com') && iconUrl.includes('/blob/')) {
         iconUrl = iconUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
       }
-      
-      img.src = iconUrl;
-      img.onerror = () => img.src = FALLBACK;
 
-      card.addEventListener('click', () => {
+      card.innerHTML = `
+        <img src="${iconUrl}" onerror="this.src='${FALLBACK}'">
+        <div class="game-name">${game.name || 'Untitled'}</div>
+      `;
+
+      card.onclick = () => {
         const win = window.open('about:blank', '_blank');
         if (win) {
-          win.document.body.style.margin = '0';
-          win.document.body.style.height = '100vh';
-          win.document.body.style.overflow = 'hidden';
+          win.document.body.style.cssText = "margin:0;height:100vh;overflow:hidden;";
           const iframe = win.document.createElement('iframe');
-          iframe.style.width = '100%';
-          iframe.style.height = '100%';
-          iframe.style.border = 'none';
+          iframe.style.cssText = "width:100%;height:100%;border:none;margin:0;";
           iframe.src = game.url;
           win.document.body.appendChild(iframe);
         }
-      });
-
-      card.appendChild(img);
-      const title = document.createElement('div');
-      title.textContent = game.name || 'Untitled Game';
-      card.appendChild(title);
+      };
       grid.appendChild(card);
     });
   }
 
-  // Manually add a game since Inspect is blocked
-  document.getElementById('addButton').addEventListener('click', () => {
-    const name = prompt("Enter Game Name:");
-    const url = prompt("Enter Game URL (the link to the game):");
-    const icon = prompt("Enter Icon URL (optional):");
-
-    if (name && url) {
-      let games = JSON.parse(localStorage.getItem('playedGames') || '[]');
-      games.push({ name, url, icon });
-      localStorage.setItem('playedGames', JSON.stringify(games));
-      loadGames();
+  // HIDDEN FEATURE: Double click the title to manually add or clear
+  document.getElementById('mainTitle').ondblclick = () => {
+    const action = prompt("Type 'add' to add a game or 'clear' to reset:");
+    if (action === 'add') {
+      const name = prompt("Game Name:");
+      const url = prompt("Game URL:");
+      const icon = prompt("Icon URL (optional):");
+      if (name && url) {
+        let games = JSON.parse(localStorage.getItem('playedGames') || '[]');
+        games.push({ name, url, icon });
+        localStorage.setItem('playedGames', JSON.stringify(games));
+        loadGames();
+      }
+    } else if (action === 'clear') {
+      if(confirm("Clear all games?")) {
+        localStorage.removeItem('playedGames');
+        loadGames();
+      }
     }
-  });
-
-  document.getElementById('clearButton').addEventListener('click', () => {
-    if(confirm("Clear everything?")) {
-      localStorage.removeItem('playedGames');
-      loadGames();
-    }
-  });
+  };
 
   loadGames();
 </script>
